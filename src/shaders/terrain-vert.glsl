@@ -5,6 +5,7 @@ uniform mat4 u_Model;
 uniform mat4 u_ModelInvTr;
 uniform mat4 u_ViewProj;
 uniform vec2 u_PlanePos; // Our location in the virtual world displayed by the plane
+uniform mat4 u_RotMat; // rotation matrix dependent on keyboard presses
 uniform int u_Time;
 uniform int u_Color;
 uniform int u_Anim;
@@ -266,5 +267,6 @@ void main()
   //vec4 modelposition = vec4(vs_Pos.x, vs_Pos.y, vs_Pos.z, 1.0);
   vec4 modelposition = vec4(coor.x, coor.y, coor.z, 1.0);
   modelposition = u_Model * modelposition;
-  gl_Position = u_ViewProj * modelposition;
+  //gl_Position = u_RotMat * u_ViewProj * modelposition;
+  gl_Position = (u_ViewProj * u_RotMat) * modelposition;
 }

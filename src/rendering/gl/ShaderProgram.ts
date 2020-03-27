@@ -42,6 +42,8 @@ class ShaderProgram {
   unifColor: WebGLUniformLocation;
   unifPlanePos: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
+
+  unifRotMat: WebGLUniformLocation;
   //unifCustomCol: WebGLUniformLocation;
   //unifAnimBool: WebGLUniformLocation;
 
@@ -76,6 +78,8 @@ class ShaderProgram {
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifPlanePos   = gl.getUniformLocation(this.prog, "u_PlanePos");
     this.unifTime   = gl.getUniformLocation(this.prog, "u_Time");
+
+    this.unifRotMat = gl.getUniformLocation(this.prog, "u_RotMat");
     //this.unifCustomCol   = gl.getUniformLocation(this.prog, "u_Color");
     //this.unifAnimBool   = gl.getUniformLocation(this.prog, "u_Anim");
   }
@@ -125,6 +129,13 @@ class ShaderProgram {
     this.use();
     if (this.unifPlanePos !== -1) {
       gl.uniform2fv(this.unifPlanePos, pos);
+    }
+  }
+
+  setRotMatrix(rot: mat4) {
+    this.use();
+    if (this.unifRotMat !== -1) {
+      gl.uniformMatrix4fv(this.unifRotMat, false, rot);
     }
   }
 

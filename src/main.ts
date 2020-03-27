@@ -1,4 +1,4 @@
-import {vec2, vec3, vec4} from 'gl-matrix';
+import {vec2, vec3, vec4, mat4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
@@ -29,10 +29,17 @@ let aPressed: boolean;
 let sPressed: boolean;
 let dPressed: boolean;
 let planePos: vec2;
+
+let planeRot: number;
 //let sandBool: boolean = false;
 //let animBool: boolean = false;
 let time: number = 0;
 let obj0: string = readTextFile('../mesh/cube.obj');
+
+//let target: vec3 = vec3.fromValues(0,-5,0);
+let position: vec3;
+let target: vec3;
+
 
 function loadScene() {
   square = new Square(vec3.fromValues(0, 0, 0));
@@ -50,6 +57,7 @@ function loadScene() {
   sPressed = false;
   dPressed = false;
   planePos = vec2.fromValues(0,0);
+  planeRot = 0.0;
 
   // mesh instancing
   /*let colorsArray = [];
@@ -163,6 +171,7 @@ function main() {
 
   //const camera = new Camera(vec3.fromValues(0, 5, -20), vec3.fromValues(0, 0, 0));
   const camera = new Camera(vec3.fromValues(0, 2.5, -20), vec3.fromValues(0, -5, 0));
+  //const camera = new Camera(position, target);
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(164.0 / 255.0, 233.0 / 255.0, 1.0, 1);
@@ -187,22 +196,35 @@ function main() {
     let velocity: vec2 = vec2.fromValues(0,0);
     //let v: number = 0.3;
     let v: number = 0.15;
+    let degrees: number = 1.0;
     if(wPressed) {
       velocity[1] += v;
     }
     if(aPressed) {
-      velocity[0] += v;
+      //velocity[0] += v;
+      planeRot -= degrees;
     }
     if(sPressed) {
       velocity[1] -= v;
     }
     if(dPressed) {
-      velocity[0] -= v;
+      //velocity[0] -= v;
+      planeRot += degrees;
     }
     let newPos: vec2 = vec2.fromValues(0,0);
-    vec2.add(newPos, velocity, planePos);
+    vec2.add(newPos, velocity, planePos); // velocity + planePos in dir of planeRot
     lambert.setPlanePos(newPos);
     planePos = newPos;
+
+    // convert rotation from degrees to radians
+    let rotRad = (planeRot * Math.PI) / 180.0;
+    // create rotation matrix
+    let rotMat: mat4 = mat4.fromValues(Math.cos(rotRad), 0, -Math.sin(rotRad), 0,
+                                       0, 1, 0, 0,
+                                       Math.sin(rotRad), 0, Math.cos(rotRad), 0,
+                                       0, 0, 0, 1);
+    lambert.setRotMatrix(rotMat);
+    console.log(rotMat);
   }
 
   // This function will be called every frame
