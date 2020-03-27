@@ -118,14 +118,24 @@ void main()
 
     out_Col = col_final;*/
     // medium
+    //vec2 uv = fs_UV * 10.0 + vec2(fs_Time * -0.15);
+
     vec2 uv = fs_UV * 10.0 + vec2(fs_Time * -0.15);
 
-    uv.y += 0.01 * (sin(uv.x * 13.5 + fs_Time * 5.35) + 
+    uv.y += sin(fs_Time * 0.1f);
+    uv.x += sin(fs_Time * 0.025f);
+
+    /*uv.y += 0.01 * (sin(uv.x * 13.5 + fs_Time * 5.35) + 
                      sin(uv.x * 4.8 + fs_Time * 1.05) + sin(uv.x * 7.3 + fs_Time * 0.45)) / 3.0;
     uv.x += 0.12 * (sin(uv.y * 4.0 + fs_Time * 0.5) + 
                      sin(uv.y * 16.8 + fs_Time * 3.75) + sin(uv.y * 11.3 + fs_Time * 0.2)) / 3.0;
     uv.y += 0.12 * (sin(uv.x * 14.2 + fs_Time * 0.64) + 
-                     sin(uv.x * 6.3 + fs_Time * 1.65) + sin(uv.x * 8.2 + fs_Time * 2.45)) / 3.0;
+                     sin(uv.x * 6.3 + fs_Time * 1.65) + sin(uv.x * 8.2 + fs_Time * 2.45)) / 3.0;*/
+
+    /*uv.y += 0.5 * (sin(uv.x * 13.5 + fs_Time * 5.35) + 
+                     sin(uv.x * 4.8 + fs_Time * 1.05) + sin(uv.x * 7.3 + fs_Time * 0.45)) / 3.0;
+    uv.x += 5.12 * (sin(uv.y * 4.0 + fs_Time * 0.5) + 
+                     sin(uv.y * 16.8 + fs_Time * 3.75) + sin(uv.y * 11.3 + fs_Time * 0.2)) / 3.0;*/
 
     // worley texture
     float worl = WorleyNoise(uv.xy / 20.3);
@@ -156,11 +166,11 @@ void main()
 
     // WORLEY
     //vec3 col_base = vec3(0.1686, 0.8314, 0.8784);
-    vec3 col_pt = vec3(1.0, 1.0, 1.0);
-    //out_Col = vec4(mix(vec3(out_Col),col_pt,0.3), 1.0);
-    
     //out_Col = vec4(mix(vec3(out_Col),col_worl,0.2),1.0);
     //out_Col = vec4(mix(vec3(out_Col),col_worl2,0.125),1.0);
+    
+    out_Col = vec4(mix(vec3(out_Col),col_worl,0.075),1.0);
+    out_Col = vec4(mix(vec3(out_Col),col_worl2,0.1),1.0);
 
     // lighting / using normals
     // Implement specular light
@@ -172,8 +182,24 @@ void main()
           float specularIntensity = max(pow(dot(normalize(H), normalize(fs_Nor)), 1.0), 0.0);
 
           // Compute final shaded color
-          vec3 mater = vec3(0.25) * min(specularIntensity, 1.0);
-          out_Col += vec4(mater, 0.0);
+          vec3 mater = vec3(0.1647, 0.9451, 0.9451) * min(specularIntensity, 1.0);
+          out_Col = vec4(mix(vec3(out_Col),mater,0.6),1.0);
+
+
+    // ALT LIGHTING
+    /*float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);
+    vec4 diffuseColor = vec4(out_Col);
+    vec4 light = vec4(1.0, 5.0, 0.0, 0.0);
+    // Calculate diffuse term for shading
+    float diffuseTerm = dot(normalize(vec3(fs_Nor)), normalize(vec3(light)));
+    // Avoid negative lighting values
+    diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
+    float ambientTerm = 0.2;
+    float lightIntensity = diffuseTerm + ambientTerm;
+    lightIntensity = 1.f - lightIntensity;
+    vec4 lightCol = vec4(1.0, 196.0/255.0, 97.0/255.0, 1.0);
+    // Compute final shaded color
+    out_Col = vec4(diffuseColor.rgb * lightIntensity * lightCol.rgb, diffuseColor.a);*/
     
 
     // distance fog
@@ -189,8 +215,10 @@ void main()
     }*/
 
     // GRID OR NORMAL
+    vec3 col_pt = vec3(1.0, 1.0, 1.0);
     if (fract(fs_UV.x) < 0.01f || fract(fs_UV.y) < 0.01f) {
-        out_Col = vec4(col_pt,1.0);
+        //out_Col = vec4(col_pt,1.0); //white grid
+        out_Col = vec4(mix(vec3(out_Col),col_pt,0.5),1.0); //grid opacity lowered
     }
 
     
