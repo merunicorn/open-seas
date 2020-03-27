@@ -25,6 +25,10 @@ class ShaderProgram {
   attrNor: number;
   attrCol: number;
 
+  unifRef: WebGLUniformLocation;
+  unifEye: WebGLUniformLocation;
+  unifUp: WebGLUniformLocation;
+
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
@@ -48,6 +52,11 @@ class ShaderProgram {
     this.attrPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
+
+    this.unifEye   = gl.getUniformLocation(this.prog, "u_Eye");
+    this.unifRef   = gl.getUniformLocation(this.prog, "u_Ref");
+    this.unifUp   = gl.getUniformLocation(this.prog, "u_Up");
+
     this.unifModel      = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
@@ -61,6 +70,19 @@ class ShaderProgram {
     if (activeProgram !== this.prog) {
       gl.useProgram(this.prog);
       activeProgram = this.prog;
+    }
+  }
+
+  setEyeRefUp(eye: vec3, ref: vec3, up: vec3) {
+    this.use();
+    if(this.unifEye !== -1) {
+      gl.uniform3f(this.unifEye, eye[0], eye[1], eye[2]);
+    }
+    if(this.unifRef !== -1) {
+      gl.uniform3f(this.unifRef, ref[0], ref[1], ref[2]);
+    }
+    if(this.unifUp !== -1) {
+      gl.uniform3f(this.unifUp, up[0], up[1], up[2]);
     }
   }
 

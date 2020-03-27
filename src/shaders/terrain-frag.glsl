@@ -1,9 +1,11 @@
 #version 300 es
 precision highp float;
 
+uniform vec3 u_Eye, u_Ref, u_Up;
 uniform vec2 u_PlanePos; // Our location in the virtual world displayed by the plane
 
-vec3 bg_Col = vec3(88.0 / 255.0, 91.0 / 255.0, 196.0 / 255.0);
+//vec3 bg_Col = vec3(88.0 / 255.0, 91.0 / 255.0, 196.0 / 255.0);
+vec3 bg_Col = vec3(0.5216, 0.8157, 0.9059);
 //vec3 sand_Col = vec3(u_Color.x, u_Color.y, u_Color.z);
 vec3 sand_Col = vec3(255.0 / 255.0, 229.0 / 255.0, 99.0 / 255.0);
 
@@ -33,8 +35,9 @@ in float fs_Rock;
 in float fs_guiCol;
 in float fs_guiSan;
 in float fs_Time;
+//in float fs_Peak;
 
-//Cosine Color Pallete (Adam's code)
+//Cosine Color Palette (Adam's code)
 vec3 cosinePalette(float t, float i, float time) {
     if (i == 1.0) {
         if (fs_guiCol == 1.0) {
@@ -126,21 +129,70 @@ void main()
 
     // worley texture
     float worl = WorleyNoise(uv.xy / 20.3);
+    float worl2 = WorleyNoise(uv.xy / 18.2);
     vec3 col_worl = vec3(worl);
+    vec3 col_worl2 = vec3(worl2);
     vec3 col_lvl1 = vec3(0.1686, 0.8314, 0.8784);
+    vec3 col_lvl2 = vec3(0.2667, 0.2392, 0.5412);
     col_worl += col_lvl1;
+    col_worl2 = vec3(1.0) - col_worl2;
+    col_worl2 += col_lvl2 / vec3(5.0);
     //vec3 col_worl = cosinePalette(worl, 1.0, fs_Time);
 
-    // grid
-    vec3 col_base = vec3(0.2, 0.651, 0.8275);
+    vec3 col_base = vec3(0.0706, 0.6431, 0.8667);
+
+    // gradient
+    vec3 grad_Col = vec3(0.4039, 0.9059, 0.8824);
+    grad_Col = vec3(0.0588, 0.0902, 0.5725);
+    float p = length(fs_Pos);
+    float t1 = clamp(smoothstep(20.0, 80.0, p), 0.0, 1.0);
+    //float t1 = distance(fs_Pos.xz, fs_UV);
+    out_Col = vec4(mix(vec3(col_base),grad_Col,t1 * 0.7),1.0);
+
+    // cool color distortion, potentially a good effect for wake??
+    vec3 dist_Col = vec3(0.4039, 0.9059, 0.8824);
+    float t3 = distance(fs_Pos.xy, vec2(0.f,0.5f));
+    //out_Col = vec4(0.5) * vec4(mix(vec3(out_Col),dist_Col,t3),1.0);
+
+    // WORLEY
     //vec3 col_base = vec3(0.1686, 0.8314, 0.8784);
     vec3 col_pt = vec3(1.0, 1.0, 1.0);
-    out_Col = vec4(mix(col_base,col_worl,0.2),1.0);
+    //out_Col = vec4(mix(vec3(out_Col),col_pt,0.3), 1.0);
+    
+    //out_Col = vec4(mix(vec3(out_Col),col_worl,0.2),1.0);
+    //out_Col = vec4(mix(vec3(out_Col),col_worl2,0.125),1.0);
+
+    // lighting / using normals
+    // Implement specular light
+          vec4 H = vec4(1.0);
+          vec4 lights = vec4(3.0, 5.0, 3.0, 2.0);
+          for (int i = 0; i < 4; i++) {
+            H[i] = (lights[i] + u_Eye[i]) / 2.0;
+          }
+          float specularIntensity = max(pow(dot(normalize(H), normalize(fs_Nor)), 1.0), 0.0);
+
+          // Compute final shaded color
+          vec3 mater = vec3(0.25) * min(specularIntensity, 1.0);
+          out_Col += vec4(mater, 0.0);
+    
+
+    // distance fog
+    float t2 = clamp(smoothstep(40.0, 80.0, p), 0.0, 1.0);
+    out_Col = vec4(mix(vec3(out_Col),bg_Col,t2),1.0);
+
+    // GRID
     /*if (fract(fs_UV.x) < 0.01f || fract(fs_UV.y) < 0.01f) {
         out_Col = vec4(col_pt,1.0);
     } else {
-        //out_Col = vec4(col_base,1.0);
-        out_Col = vec4(mix(col_base,col_worl,0.25),1.0);
+        out_Col = vec4(col_base,1.0);
+        //out_Col = vec4(mix(col_base,col_worl,0.15),1.0);
     }*/
+
+    // GRID OR NORMAL
+    if (fract(fs_UV.x) < 0.01f || fract(fs_UV.y) < 0.01f) {
+        out_Col = vec4(col_pt,1.0);
+    }
+
+    
     
 }

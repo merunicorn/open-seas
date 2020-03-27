@@ -29,10 +29,10 @@ let planePos: vec2;
 let time: number = 0;
 
 function loadScene() {
-  //square = new Square(vec3.fromValues(0, 0, 0));
-  //square.create();
+  square = new Square(vec3.fromValues(0, 0, 0));
+  square.create();
   //plane = new Plane(vec3.fromValues(0,0,0), vec2.fromValues(100,100), 20);
-  plane = new Plane(vec3.fromValues(0,0,0), vec2.fromValues(150,150), 18);
+  plane = new Plane(vec3.fromValues(0,0,0), vec2.fromValues(150,150), 18); //18
   plane.create();
 
   wPressed = false;
@@ -168,10 +168,9 @@ function main() {
     renderer.render(camera, lambert, [
       plane], 
       time);
-      //sandBool, time, animBool);
-    /*renderer.render(camera, flat, [
+    renderer.render(camera, flat, [
       square],
-      sandBool, time, animBool);*/
+      time);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

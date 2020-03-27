@@ -138,15 +138,29 @@ vec3 wavePropogation(vec3 h_vals) {
 vec3 gerstnerWave(vec2 x0) {
     // define number of functions
     //int n = 4;
-    int n = int(random1(vec2(1.0,2.0), vec2(int(x0.x),int(x0.y))) * 3.f) + 1;
+    int n = int(random1(vec2(1.0,2.0), vec2(int(x0.x),int(x0.y))) * 2.f) + 2;
 
     // define wave parameter arrays
-    float A[] = float[](0.3, 0.5 / 3.0, 0.3 / 3.0, 0.45 / 3.0); // wave amplitude
-    vec2 k[] = vec2[](vec2(0.5f,0.5f),vec2(1.f,0.8f),vec2(0.5f,0.9f),vec2(0.7f,0.1f)); // wave vector (horiz)
-    float theta[] = float[](8.0, 2.0, 3.0, 1.5); // wavelength
-    float k_mag[] = float[](0.0, 0.0, 0.0, 0.0); // k magnitude
-    float w[] = float[](0.0, 0.0, 0.0, 0.0); // frequency
-    float p[] = float[](0.f, 3.f, 0.2f, 0.5f); // phase
+    //float A[] = float[](0.3, 0.5 / 3.0, 0.3 / 3.0, 0.45 / 3.0); // wave amplitude
+    //float A[] = float[](0.4, 0.25, 0.075, 0.25); // wave amplitude
+
+    float A[] = float[](0.4, 0.15, 0.1, 0.6); // wave amplitude
+
+    //***vec2 k[] = vec2[](vec2(0.5f,0.5f),vec2(1.f,0.8f),vec2(0.5f,0.9f),vec2(0.7f,0.1f)); // wave vector (horiz)
+    vec2 k[] = vec2[](vec2(0.f,-1.f),vec2(-0.5f,-0.5f),vec2(0.5f,0.9f),vec2(-0.7f,-0.1f)); // wave vector (horiz)
+
+    //vec2 k[] = vec2[](vec2(0.f,1.f),vec2(0.5,0.5f),vec2(0.9f,0.5f),vec2(0.1f,0.7f)); // wave vector (horiz)
+
+    //float theta[] = float[](8.0, 2.0, 3.0, 1.5); // wavelength
+    //float theta[] = float[](0.5, 4.0, 5.0, 2.5); // wavelength
+    //float theta[] = float[](8.0, 5.0, 3.0, 1.0); // wavelength
+
+    float theta[] = float[](8.0, 2.0, 3.0, 5.0); // wavelength
+
+    float k_mag[] = float[](1.0, 3.0, 2.0, 5.0); // k magnitude
+    float w[] = float[](1.0, 0.5, 0.25, 1.5); // frequency
+    //float p[] = float[](0.f, 3.f, 0.2f, 0.5f); // phase
+    float p[] = float[](0.75f, 3.f, 0.2f, 0.5f); // phase
 
     // define variables
     //float A = 0.7; // wave amplitude
@@ -163,6 +177,8 @@ vec3 gerstnerWave(vec2 x0) {
 
     vec2 xcalc = vec2(0.0,0.0);
     float ycalc = 0.f;
+    vec3 binormals = vec3(0.0,0.0,0.0);
+    vec3 tangents = vec3(0.0,0.0,0.0);
   
     for (int i = 0; i < n; i++) {
       // calculate k_mag & w
@@ -175,7 +191,23 @@ vec3 gerstnerWave(vec2 x0) {
       // calculate
       xcalc = xcalc + (k[i]/k_mag[i])*A[i]*sin(dot(k[i],x0) - w[i]*t + p[i]);
       ycalc = ycalc + A[i]*cos(dot(k[i],x0) - w[i]*t + p[i]);
+
+      // calculate normals
+      binormals = vec3(1.f - (binormals.x + (k[i]/k_mag[i]).x * (k[i]/k_mag[i]).x * A[i]*sin(dot(k[i],x0) - w[i]*t + p[i])),
+                            -1.f * (binormals.y + (k[i]/k_mag[i]).x * (k[i]/k_mag[i]).y * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i])),
+                            binormals.z + (k[i]/k_mag[i]).x * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i]));
+      tangents = vec3(tangents.x + (-1.f * (k[i]/k_mag[i]).x * (k[i]/k_mag[i]).y *A[i]*sin(dot(k[i],x0) - w[i]*t + p[i])), 
+                           tangents.y + (1.f - (k[i]/k_mag[i]).y * (k[i]/k_mag[i]).y * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i])), 
+                           tangents.z + ((k[i]/k_mag[i]).y * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i])));
+      /*fs_Nor = vec4(-1.f * fs_Nor.x + (k[i]/k_mag[i]).x * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i]), 
+                    -1.f * fs_Nor.y + (k[i]/k_mag[i]).y * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i]), 
+                    1.f - (fs_Nor.z + A[i]*sin(dot(k[i],x0) - w[i]*t + p[i])), 
+                    1.f);*/
+      fs_Nor = vec4(-1.f * fs_Nor.x + (k[i]/k_mag[i]).x * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i]), 
+                    fs_Nor.y + (k[i]/k_mag[i]).y * A[i]*cos(dot(k[i],x0) - w[i]*t + p[i]), 
+                    -1.f * fs_Nor.z * sin(dot(k[i],x0) - w[i]*t + p[i]), 1.f);
     }
+    
     coor.xz = x0 - xcalc;
     coor.y = ycalc;
 
