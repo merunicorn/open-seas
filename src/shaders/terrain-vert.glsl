@@ -27,6 +27,8 @@ out float fs_guiCol;
 out float fs_guiSan;
 out float fs_Time;
 
+out float fs_Peak;
+
 vec3 h_vals = vec3(0,0,0);
 
 float random1( vec2 p , vec2 seed) {
@@ -266,6 +268,25 @@ void main()
   vec3 coor = gerstnerWave(vs_Pos.xz);
   //vec4 modelposition = vec4(vs_Pos.x, vs_Pos.y, vs_Pos.z, 1.0);
   vec4 modelposition = vec4(coor.x, coor.y, coor.z, 1.0);
+
+  // offset so boat stays on top of water
+  //if (vs_Pos.xz > vec2(-0.1f,-0.1f) && vs_Pos.xz < vec2(0.1f,0.1f)) {
+  /*if (coor.x > -0.5 && coor.x < 0.5
+      && coor.z > -15.5 && coor.z < -14.5) {
+    modelposition.y -= coor.y;
+    //modelposition.y += 10.0;
+  }*/
+  modelposition.y -= 0.5;
+
+  // pass fs_Peak
+  if (modelposition.y > -0.15f) {
+      fs_Peak = 1.0;
+  } else if (modelposition.y > -0.25f) {
+      fs_Peak = 0.5;
+  } else {
+      fs_Peak = 0.0;
+  }
+
   modelposition = u_Model * modelposition;
   //gl_Position = u_RotMat * u_ViewProj * modelposition;
   gl_Position = (u_ViewProj * u_RotMat) * modelposition;

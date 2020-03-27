@@ -35,7 +35,7 @@ in float fs_Rock;
 in float fs_guiCol;
 in float fs_guiSan;
 in float fs_Time;
-//in float fs_Peak;
+in float fs_Peak;
 
 //Cosine Color Palette (Adam's code)
 vec3 cosinePalette(float t, float i, float time) {
@@ -53,6 +53,10 @@ vec3 cosinePalette(float t, float i, float time) {
         (rock_c * t + rock_d)), 0.0, 1.0);
     }
     
+}
+
+float random1( vec2 p , vec2 seed) {
+  return fract(sin(dot(p + seed, vec2(127.1, 311.7))) * 43758.5453);
 }
 
 vec2 random2( vec2 p , vec2 seed) {
@@ -221,6 +225,47 @@ void main()
         out_Col = vec4(mix(vec3(out_Col),col_pt,0.5),1.0); //grid opacity lowered
     }
 
-    
+    // CRESTS
+    // float worl_test = WorleyNoise(fs_UV.yy);
+
+    // worley tests
+    float worl_test = WorleyNoise(fs_UV.xy * 2.0);
+    vec3 worl_col = vec3(worl_test);
+    // add random
+    float bound = 0.65;
+    float bound2 = 0.85;
+    //bound = (random1(fs_UV, fs_UV) * 0.4f) + 0.4;
+
+    // stronger distinctions
+    // distort w second worley test: more white
+    float worl_test2 = WorleyNoise(fs_UV.xy / 2.0);
+    if (worl_test < bound) {
+        worl_test = 0.0;
+        worl_col = vec3(out_Col);
+    } else if (worl_test < bound2 && worl_test2 < 0.5) {
+        //worl_col = vec3(0.502, 0.7333, 0.8863);
+        worl_col = vec3(out_Col);
+    } else {
+        worl_test = 1.0;
+        worl_col = vec3(0.702, 0.8706, 0.9412);
+        //out_Col += vec4(worl_col,0.0);
+    }
+    //out_Col += vec4(worl_col,1.0);
+    out_Col = vec4(mix(vec3(out_Col),worl_col,0.65),1.0);
+
+    // fs_Peak
+    if (fs_Peak >= 0.5) {
+        float worl_peak = WorleyNoise(fs_UV.yx * 9.5);
+        float worl_peak2 = WorleyNoise(fs_UV.yy / 13.5);
+        vec3 peak_col = vec3(out_Col);
+        if (worl_peak < 0.85 && worl_peak > 0.6 && worl_peak2 > 0.3) {
+            if (fs_Peak == 1.0) {
+                peak_col = vec3(1.0);
+            } else {
+                peak_col = vec3(out_Col) + vec3(0.1137, 0.1176, 0.1216);
+            }
+        }
+        out_Col = vec4(mix(vec3(out_Col),vec3(peak_col),0.7),1.0);
+    }
     
 }

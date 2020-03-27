@@ -18,6 +18,7 @@ const controls = {
   'Load Scene': loadScene, // A function pointer, essentially
   //sandy: false,
   //animated: false,
+  boat: true,
 };
 
 let square: Square;
@@ -33,6 +34,7 @@ let planePos: vec2;
 let planeRot: number;
 //let sandBool: boolean = false;
 //let animBool: boolean = false;
+let boatBool: boolean = true;
 let time: number = 0;
 let obj0: string = readTextFile('../mesh/cube.obj');
 
@@ -153,6 +155,7 @@ function main() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, 'Load Scene');
+  gui.add(controls, 'boat');
   //gui.add(controls, 'sandy');
   //gui.add(controls, 'animated');
 
@@ -256,9 +259,11 @@ function main() {
     renderer.render(camera, flat, [
       square],
       time);
-    renderer.render(camera, meshShader, [
-      mesh_cube],
-      time);
+    if (controls.boat == true) {
+      renderer.render(camera, meshShader, [
+        mesh_cube],
+        time);
+    }
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
