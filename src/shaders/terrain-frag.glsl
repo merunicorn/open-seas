@@ -6,6 +6,7 @@ uniform vec3 u_Eye, u_Ref, u_Up;
 uniform vec2 u_PlanePos; // Our location in the virtual world displayed by the plane
 uniform mat4 u_RotMat;
 uniform mat4 u_InvRotMat;
+uniform int u_Foam;
 
 //vec3 bg_Col = vec3(88.0 / 255.0, 91.0 / 255.0, 196.0 / 255.0);
 vec3 bg_Col = vec3(0.5216, 0.8157, 0.9059);
@@ -284,6 +285,8 @@ void main()
     }
 
     vec2 boatPos = vec2(0.f,-16.f); // initial boat pos, in future this will be passed in dep on new boat pos on plane
+
+    if (float(u_Foam) == 1.0) {
     // FOAM PATTERN
     float foamPatFlag = 0.f;
     float rInit = 1.7f;
@@ -361,6 +364,7 @@ void main()
     if( foamPatFlag == 1.f && 
     !(foamFlag1 == 1.f || foamFlag2 != 1.f)) {
         out_Col = vec4(mix(vec3(out_Col),vec3(foamCol),0.45),1.0);
+    }
     }
     
 }

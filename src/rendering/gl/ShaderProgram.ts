@@ -45,6 +45,7 @@ class ShaderProgram {
 
   unifRotMat: WebGLUniformLocation;
   unifInvRotMat: WebGLUniformLocation;
+  unifFoam: WebGLUniformLocation;
   //unifCustomCol: WebGLUniformLocation;
   //unifAnimBool: WebGLUniformLocation;
 
@@ -82,6 +83,7 @@ class ShaderProgram {
 
     this.unifRotMat = gl.getUniformLocation(this.prog, "u_RotMat");
     this.unifInvRotMat = gl.getUniformLocation(this.prog, "u_InvRotMat");
+    this.unifFoam = gl.getUniformLocation(this.prog, "u_Foam");
     //this.unifCustomCol   = gl.getUniformLocation(this.prog, "u_Color");
     //this.unifAnimBool   = gl.getUniformLocation(this.prog, "u_Anim");
   }
@@ -145,6 +147,15 @@ class ShaderProgram {
     this.use();
     if (this.unifInvRotMat !== -1) {
       gl.uniformMatrix4fv(this.unifInvRotMat, false, rot);
+    }
+  }
+
+  setFoam(foam: boolean) {
+    this.use();
+    if (this.unifFoam !== -1 && foam == true) {
+      gl.uniform1i(this.unifFoam, 1);
+    } else {
+      gl.uniform1i(this.unifFoam, 0);
     }
   }
 

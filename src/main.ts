@@ -19,6 +19,7 @@ const controls = {
   //sandy: false,
   //animated: false,
   boat: true,
+  foam: true,
 };
 
 let square: Square;
@@ -157,6 +158,7 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'Load Scene');
   gui.add(controls, 'boat');
+  gui.add(controls, 'foam');
   //gui.add(controls, 'sandy');
   //gui.add(controls, 'animated');
 
@@ -260,6 +262,7 @@ function main() {
     else {
       animBool = false;
     }*/
+    lambert.setFoam(controls.foam);
 
     renderer.render(camera, lambert, [
       plane], 
