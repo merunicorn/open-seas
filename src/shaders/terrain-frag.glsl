@@ -1,8 +1,11 @@
 #version 300 es
+#define M_PI 3.1415926535897932384626433832795
 precision highp float;
 
 uniform vec3 u_Eye, u_Ref, u_Up;
 uniform vec2 u_PlanePos; // Our location in the virtual world displayed by the plane
+uniform mat4 u_RotMat;
+uniform mat4 u_InvRotMat;
 
 //vec3 bg_Col = vec3(88.0 / 255.0, 91.0 / 255.0, 196.0 / 255.0);
 vec3 bg_Col = vec3(0.5216, 0.8157, 0.9059);
@@ -97,30 +100,6 @@ void main()
 {
     //float t = clamp(smoothstep(40.0, 50.0, length(fs_Pos)), 0.0, 1.0); // Distance fog
 
-    /*if(fs_guiSan == 1.0) {
-        sand_Col = vec3(255.0 / 255.0, 165.0 / 255.0, 99.0 / 255.0);
-    }
-    else {
-        sand_Col = vec3(255.0 / 255.0, 229.0 / 255.0, 99.0 / 255.0);
-    }
-    
-    vec3 col_fbm = vec3(mix(sand_Col, vec3(0.25 * (fs_FBM + 1.0)), 0.5));
-    vec4 col_step = vec4(mix(col_fbm, bg_Col, t), 1.0);
-
-    vec3 col_sunlight = cosinePalette((fs_FBM/1.5) * fs_Worley, 1.0, fs_Time);
-    vec4 col_step2 = vec4(mix(col_sunlight * 1.7, bg_Col, t), 1.0);
-
-    vec3 col_rock = 0.5 * cosinePalette((fs_FBM/1.5) * pow(fs_Worley,0.2), 2.0, fs_Time);
-    vec4 col_step3 = vec4(mix(col_rock, bg_Col, t), 1.0);
-    if (fs_Rock < 0.2) {
-        col_step3 = vec4(mix(vec3(col_step), bg_Col, t), 1.0);
-    }
-
-    vec4 col_sand = vec4(mix(col_step, col_step2, 0.2));
-    vec4 col_rocksun = vec4(mix(col_step3, col_step2, 0.2));
-    vec4 col_final = vec4(mix(col_sand, col_rocksun, 0.5));
-
-    out_Col = col_final;*/
     // medium
     //vec2 uv = fs_UV * 10.0 + vec2(fs_Time * -0.15);
 
@@ -267,5 +246,18 @@ void main()
         }
         out_Col = vec4(mix(vec3(out_Col),vec3(peak_col),0.7),1.0);
     }
+
+
+    // FOAM around initial boat pos
+
+    /*if (u_RotMat == id) {
+        out_Col = vec4(1.0,0.0,1.0,1.0);
+    }*/
+    /*if (fs_UV.x > c1.x && fs_UV.x < c2.x && fs_UV.y > c1.y - 16.f && fs_UV.y < c3.y - 16.f) {
+    //if (fs_UV.x > -1.f && fs_UV.x < 1.f && fs_UV.y > -4.5f - 16.f && fs_UV.y < 4.5f - 16.f) {
+      out_Col = vec4(0.6039, 0.5569, 0.7804, 1.0);
+    } else {
+      out_Col = vec4(0.4549, 0.2549, 0.0706, 1.0);
+    }*/
     
 }

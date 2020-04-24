@@ -44,6 +44,7 @@ class ShaderProgram {
   unifTime: WebGLUniformLocation;
 
   unifRotMat: WebGLUniformLocation;
+  unifInvRotMat: WebGLUniformLocation;
   //unifCustomCol: WebGLUniformLocation;
   //unifAnimBool: WebGLUniformLocation;
 
@@ -80,6 +81,7 @@ class ShaderProgram {
     this.unifTime   = gl.getUniformLocation(this.prog, "u_Time");
 
     this.unifRotMat = gl.getUniformLocation(this.prog, "u_RotMat");
+    this.unifInvRotMat = gl.getUniformLocation(this.prog, "u_InvRotMat");
     //this.unifCustomCol   = gl.getUniformLocation(this.prog, "u_Color");
     //this.unifAnimBool   = gl.getUniformLocation(this.prog, "u_Anim");
   }
@@ -136,6 +138,13 @@ class ShaderProgram {
     this.use();
     if (this.unifRotMat !== -1) {
       gl.uniformMatrix4fv(this.unifRotMat, false, rot);
+    }
+  }
+
+  setInvRotMatrix(rot: mat4) {
+    this.use();
+    if (this.unifInvRotMat !== -1) {
+      gl.uniformMatrix4fv(this.unifInvRotMat, false, rot);
     }
   }
 

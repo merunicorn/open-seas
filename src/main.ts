@@ -36,7 +36,8 @@ let planeRot: number;
 //let animBool: boolean = false;
 let boatBool: boolean = true;
 let time: number = 0;
-let obj0: string = readTextFile('../mesh/cube.obj');
+//let obj0: string = readTextFile('../mesh/cube2.obj');
+let obj0: string = readTextFile('../mesh/rect8.obj');
 
 //let target: vec3 = vec3.fromValues(0,-5,0);
 let position: vec3;
@@ -87,7 +88,7 @@ function loadScene() {
   //mesh_cube.setNumInstances(k);
   mesh_cube.setVBOTransform(colors, transf1, transf2, transf3, transf4);*/
 
-  let offsetsArray = [];
+  /*let offsetsArray = [];
   let colorsArray = [];
   let n: number = 10.0;
   for(let i = 0; i < n; i++) {
@@ -101,11 +102,11 @@ function loadScene() {
       colorsArray.push(1.0);
       colorsArray.push(1.0); // Alpha channel
     }
-  }
-  let offsets: Float32Array = new Float32Array(offsetsArray);
-  let colors: Float32Array = new Float32Array(colorsArray);
-  mesh_cube.setInstanceVBOs(offsets, colors);
-  mesh_cube.setNumInstances(n * n);
+  }*/
+  //let offsets: Float32Array = new Float32Array(offsetsArray);
+  //let colors: Float32Array = new Float32Array(colorsArray);
+  //mesh_cube.setInstanceVBOs(offsets, colors);
+  //mesh_cube.setNumInstances(n * n);
 }
 
 function main() {
@@ -200,18 +201,22 @@ function main() {
     //let v: number = 0.3;
     let v: number = 0.15;
     let degrees: number = 1.0;
+    // convert rotation from degrees to radians
+    let rotRad = (planeRot * Math.PI) / 180.0;
+
     if(wPressed) {
-      velocity[1] += v;
+      velocity[1] += v*Math.cos(rotRad); // z
+      velocity[0] -= v*Math.sin(rotRad); // x
     }
     if(aPressed) {
-      //velocity[0] += v;
       planeRot -= degrees;
     }
     if(sPressed) {
-      velocity[1] -= v;
+      v = 0.075;
+      velocity[1] -= v*Math.cos(rotRad); // z
+      velocity[0] += v*Math.sin(rotRad); // x
     }
     if(dPressed) {
-      //velocity[0] -= v;
       planeRot += degrees;
     }
     let newPos: vec2 = vec2.fromValues(0,0);
@@ -220,14 +225,17 @@ function main() {
     planePos = newPos;
 
     // convert rotation from degrees to radians
-    let rotRad = (planeRot * Math.PI) / 180.0;
+    //rotRad = (planeRot * Math.PI) / 180.0;
     // create rotation matrix
     let rotMat: mat4 = mat4.fromValues(Math.cos(rotRad), 0, -Math.sin(rotRad), 0,
                                        0, 1, 0, 0,
                                        Math.sin(rotRad), 0, Math.cos(rotRad), 0,
                                        0, 0, 0, 1);
     lambert.setRotMatrix(rotMat);
-    console.log(rotMat);
+    let invRotMat: mat4 = mat4.create();
+    mat4.invert(invRotMat, rotMat);
+    lambert.setInvRotMatrix(invRotMat);
+    //console.log(rotMat);
   }
 
   // This function will be called every frame

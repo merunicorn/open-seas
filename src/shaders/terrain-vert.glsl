@@ -276,6 +276,7 @@ void main()
     modelposition.y -= coor.y;
     //modelposition.y += 10.0;
   }*/
+  
   modelposition.y -= 0.5;
 
   // pass fs_Peak
@@ -288,6 +289,7 @@ void main()
   }
 
   modelposition = u_Model * modelposition;
-  //gl_Position = u_RotMat * u_ViewProj * modelposition;
+  //gl_Position = u_ViewProj * modelposition;
+  
   gl_Position = (u_ViewProj * u_RotMat) * modelposition;
 }
