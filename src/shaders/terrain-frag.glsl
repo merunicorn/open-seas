@@ -66,6 +66,42 @@ vec2 random2( vec2 p , vec2 seed) {
   return fract(sin(vec2(dot(p + seed, vec2(311.7, 127.1)), dot(p + seed, vec2(269.5, 183.3)))) * 85734.3545);
 }
 
+//Smoothstep (Adam's code)
+vec2 mySmoothStep(vec2 a, vec2 b, float t) {
+    t = smoothstep(0.0, 1.0, t);
+    return mix(a, b, t);
+}
+
+//2d Noise (Adam's code)
+vec2 interpNoise2D(vec2 uv) {
+    vec2 uvFract = fract(uv);
+    vec2 ll = random2(floor(uv), vec2(10.0)); //need to input seeds
+    vec2 lr = random2(floor(uv) + vec2(1,0), vec2(10.0));
+    vec2 ul = random2(floor(uv) + vec2(0,1), vec2(10.0));
+    vec2 ur = random2(floor(uv) + vec2(1,1), vec2(10.0));
+
+    vec2 lerpXL = mySmoothStep(ll, lr, uvFract.x);
+    vec2 lerpXU = mySmoothStep(ul, ur, uvFract.x);
+
+    return mySmoothStep(lerpXL, lerpXU, uvFract.y);
+}
+
+//FBM (Adam's base code)
+vec2 fbm(vec2 uv) {
+    float amp = 20.0;
+    float freq = 1.0;
+    vec2 sum = vec2(0.0);
+    float maxSum = 0.0;
+    int octaves = 10; //can modify
+    for(int i = 0; i < octaves; i++) {
+        sum += interpNoise2D(uv * freq) * amp;
+        maxSum += amp;
+        amp *= 0.5;
+        freq *= 2.0;
+    }
+    return sum / maxSum;
+}
+
 //Worley Noise (Adam's code)
 float WorleyNoise(vec2 uv)
 {
@@ -217,11 +253,11 @@ void main()
 
     // stronger distinctions
     // distort w second worley test: more white
-    float worl_test2 = WorleyNoise(fs_UV.xy / 2.0);
+    //float worl_test2 = WorleyNoise(fs_UV.xy / 2.0);
     if (worl_test < bound) {
         worl_test = 0.0;
         worl_col = vec3(out_Col);
-    } else if (worl_test < bound2 && worl_test2 < 0.5) {
+    } else if (worl_test < bound2 && worl_test < 0.5) {
         //worl_col = vec3(0.502, 0.7333, 0.8863);
         worl_col = vec3(out_Col);
     } else {
@@ -247,17 +283,84 @@ void main()
         out_Col = vec4(mix(vec3(out_Col),vec3(peak_col),0.7),1.0);
     }
 
+    vec2 boatPos = vec2(0.f,-16.f); // initial boat pos, in future this will be passed in dep on new boat pos on plane
+    // FOAM PATTERN
+    float foamPatFlag = 0.f;
+    float rInit = 1.7f;
+    float rInit2 = 3.f;
+    // ellipse equation
+    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rInit,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rInit2,2.f)) < 1.f) {
+        foamPatFlag = 1.f;
+    }
+    float rr = 2.f;
+    float rrL = 3.3f;
+    float ww = 0.2f;
+    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rr,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rrL,2.f)) < 1.f // outer ellipse
+        && (pow(fs_UV.x - boatPos.x,2.f)/pow(rr-ww,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rrL-ww,2.f)) > 1.f) { // inner ellipse
+        foamPatFlag = 1.f;
+    }
+    float rr2 = 2.3f;
+    float rr2L = 3.7f;
+    float ww2 = 0.05f;
+    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rr2,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr2L,2.f)) < 1.f
+        && (pow(fs_UV.x - boatPos.x,2.f)/pow(rr2-ww2,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr2L-ww2,2.f)) > 1.f) {
+        foamPatFlag = 1.f;
+    }
+    float rr3 = 2.8f;
+    float rr3L = 4.f;
+    float ww3 = 0.025f;
+    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rr3,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr3L,2.f)) < 1.f
+        && (pow(fs_UV.x - boatPos.x,2.f)/pow(rr3-ww3,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr3L-ww3,2.f)) > 1.f) {
+        foamPatFlag = 1.f;
+    }
 
-    // FOAM around initial boat pos
 
-    /*if (u_RotMat == id) {
-        out_Col = vec4(1.0,0.0,1.0,1.0);
-    }*/
-    /*if (fs_UV.x > c1.x && fs_UV.x < c2.x && fs_UV.y > c1.y - 16.f && fs_UV.y < c3.y - 16.f) {
-    //if (fs_UV.x > -1.f && fs_UV.x < 1.f && fs_UV.y > -4.5f - 16.f && fs_UV.y < 4.5f - 16.f) {
-      out_Col = vec4(0.6039, 0.5569, 0.7804, 1.0);
-    } else {
-      out_Col = vec4(0.4549, 0.2549, 0.0706, 1.0);
-    }*/
+    // FOAM VISIBILITY ANIMATED
+    float radius = 2.8f; // max amount ripples expand from boat X dir
+    float radiusL = 4.3f; // max amount ripples expand from boat Z dir
+    vec4 foamCol = vec4(0.6902, 0.8745, 0.9608, 1.0);
+
+    // create an ellipse that expands in radius with u_Time
+    // when radius is = to max foam radius, ellipse should start back at small radius
+    float timeC = fs_Time * 0.025f; // speed
+    float t = cos(timeC); // -1 to 1 range
+    float changeR = t*radius;
+    float changeRL = t*radiusL;
+    float foamFlag1 = 0.f;
+    float foamFlag2 = 0.f;
+    // if ellipse is not expanding
+    if (!(cos(timeC) > 0.f && sin(timeC) < 0.f ||
+        cos(timeC) < 0.f && sin(timeC) > 0.f)) {
+        //switch t such that ellipse is still expanding
+        t = sin(timeC);
+        changeR = t*radius;
+        changeRL = t*radiusL;
+    }   
+    if ((pow(fs_UV.x - boatPos.x,2.f))/(pow(changeR,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f))/(pow(changeRL,2.f)) < 1.f) {
+        foamFlag1 = 1.f;
+    } 
+
+    // second expanding circle, offset so it's slightly behind than the first
+    float timeC2 = timeC + (M_PI/6.f); //offset first circle
+    float tt = cos(timeC2); // -1 to 1 range
+    float changeR2 = tt*radius;
+    float changeR2L = tt*radiusL;
+    // if circle is not expanding
+    if (!(cos(timeC2) > 0.f && sin(timeC2) < 0.f ||
+        cos(timeC2) < 0.f && sin(timeC2) > 0.f)) {
+        //switch tt such that circle is still expanding
+        tt = sin(timeC2);
+        changeR2 = tt*radius;
+        changeR2L = tt*radiusL;
+    }
+    if ((pow(fs_UV.x - boatPos.x,2.f))/(pow(changeR2,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f))/(pow(changeR2L,2.f)) < 1.f) {
+        foamFlag2 = 1.f;
+    }
+
+    // adding semi-transparent foam
+    if( foamPatFlag == 1.f && 
+    !(foamFlag1 == 1.f || foamFlag2 != 1.f)) {
+        out_Col = vec4(mix(vec3(out_Col),vec3(foamCol),0.45),1.0);
+    }
     
 }
