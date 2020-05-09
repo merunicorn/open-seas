@@ -46,6 +46,8 @@ class ShaderProgram {
   unifRotMat: WebGLUniformLocation;
   unifInvRotMat: WebGLUniformLocation;
   unifFoam: WebGLUniformLocation;
+  unifRotDeg: WebGLUniformLocation;
+  unifOpac: WebGLUniformLocation;
   //unifCustomCol: WebGLUniformLocation;
   //unifAnimBool: WebGLUniformLocation;
 
@@ -84,6 +86,8 @@ class ShaderProgram {
     this.unifRotMat = gl.getUniformLocation(this.prog, "u_RotMat");
     this.unifInvRotMat = gl.getUniformLocation(this.prog, "u_InvRotMat");
     this.unifFoam = gl.getUniformLocation(this.prog, "u_Foam");
+    this.unifRotDeg = gl.getUniformLocation(this.prog, "u_RotDeg");
+    this.unifOpac = gl.getUniformLocation(this.prog, "u_Opacity");
     //this.unifCustomCol   = gl.getUniformLocation(this.prog, "u_Color");
     //this.unifAnimBool   = gl.getUniformLocation(this.prog, "u_Anim");
   }
@@ -150,6 +154,13 @@ class ShaderProgram {
     }
   }
 
+  setRotDeg(rot: number) {
+    this.use();
+    if (this.unifRotDeg !== -1) {
+      gl.uniform1i(this.unifRotDeg, rot);
+    }
+  }
+
   setFoam(foam: boolean) {
     this.use();
     if (this.unifFoam !== -1 && foam == true) {
@@ -159,12 +170,12 @@ class ShaderProgram {
     }
   }
 
-  /*setSandColor(col: number) {
+  setOpacity(opac: number) {
     this.use();
-    if (this.unifCustomCol !== -1) {
-      gl.uniform1i(this.unifCustomCol, col);
+    if (this.unifOpac !== -1) {
+      gl.uniform1i(this.unifOpac, opac);
     }
-  }*/
+  }
 
   setTime(t: number) {
     this.use();

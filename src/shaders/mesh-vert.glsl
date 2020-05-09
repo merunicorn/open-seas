@@ -4,6 +4,8 @@
 uniform mat4 u_ViewProj;
 uniform int u_Time;
 uniform mat4 u_RotMat; // rotation matrix dependent on keyboard presses
+uniform mat4 u_InvRotMat;
+uniform int u_RotDeg;
 
 uniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)
 // gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;
@@ -33,7 +35,7 @@ vec3 gerstnerWave(vec2 x0) {
     int n = int(random1(vec2(1.0,2.0), vec2(int(x0.x),int(x0.y))) * 2.f) + 2;
 
     // define wave parameter arrays
-    float A[] = float[](0.4, 0.15, 0.1, 0.6); // wave amplitude
+    float A[] = float[](0.3, 0.15, 0.1, 0.6); // wave amplitude
 
     vec2 k[] = vec2[](vec2(0.f,-1.f),vec2(-0.5f,-0.5f),vec2(0.5f,0.9f),vec2(-0.7f,-0.1f)); // wave vector (horiz)
     float theta[] = float[](8.0, 2.0, 3.0, 5.0); // wavelength
@@ -110,6 +112,7 @@ void main()
 
     // apply keyboard rotation matrix to account for updated position
     float rad = acos(u_RotMat[0][0]);
+    //float rad = (float(u_RotDeg) * M_PI) / 180.f;
     mat3 rotMatY = mat3(cos(rad), 0, -sin(rad),
                         0, 1, 0,
                         sin(rad), 0, cos(rad));
@@ -128,10 +131,13 @@ void main()
     float diffZ = bp1 - bp2;
 
     // determine angle of rotation
+    
     //float rotRadX = (atan(diffX/2.f))/5.f;
-    float rotRadX = (atan(diffX/2.f))/3.2f;
-    float rotRadZ = (atan(diffZ/3.f))/2.2f;
+    rad = (float(u_RotDeg) * M_PI) / 180.f;
+    float rotRadX = ((atan(diffX/2.f))/0.95f) * clamp(abs(sin(rad)), 0.2, 1.0); //3.2
+    float rotRadZ = ((atan(diffZ/2.f))/1.5f) * clamp(abs(cos(rad)), 0.2, 1.0); //2.2
     // adjust angle based on keyboard rotation
+    
     /*float rad = acos(u_RotMat[0][0]); // determine angle of keyboard rotation
     if (rad < (M_PI/2.f) + 0.1f && rad > (M_PI/2.f) - 0.1f) {
         float rotRadX = (atan(diffX/2.f))/1.2f;
@@ -151,12 +157,12 @@ void main()
     vec3 coor = gerstnerWave(vec2(0.f,0.f));
     float boatpos = coor.y;
 
-    vec4 newPos = rotMatZ * rotMatX * vec4(pos,1.0);
+    vec4 newPos = rotMatZ * rotMatX * u_InvRotMat * vec4(pos,1.0);
     newPos.z -= 16.f; // move boat closer to camera
     newPos.y -= (boatpos/4.f); // boat floats on wave
 
     // calculate new normals
-    fs_Nor = rotMatZ * rotMatX * vs_Nor;
+    fs_Nor =  rotMatZ * rotMatX * vs_Nor;
 
     gl_Position = u_ViewProj * newPos;
 }

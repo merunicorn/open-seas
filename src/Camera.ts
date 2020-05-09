@@ -8,7 +8,7 @@ class Camera {
   fovy: number = 45; // small changes make big diff, go higher
   aspectRatio: number = 1; // doesn't do anything seemingly ?
   near: number = 0.1;
-  far: number = 1000; //1000 //50
+  far: number = 500; //1000 //50
   position: vec3 = vec3.create();
   direction: vec3 = vec3.create();
   target: vec3 = vec3.create();

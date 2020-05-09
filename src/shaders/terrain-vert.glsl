@@ -147,10 +147,10 @@ vec3 gerstnerWave(vec2 x0) {
     //float A[] = float[](0.3, 0.5 / 3.0, 0.3 / 3.0, 0.45 / 3.0); // wave amplitude
     //float A[] = float[](0.4, 0.25, 0.075, 0.25); // wave amplitude
 
-    float A[] = float[](0.4, 0.15, 0.1, 0.6); // wave amplitude
+    float A[] = float[](0.3, 0.15, 0.1, 0.6); // wave amplitude
 
-    //***vec2 k[] = vec2[](vec2(0.5f,0.5f),vec2(1.f,0.8f),vec2(0.5f,0.9f),vec2(0.7f,0.1f)); // wave vector (horiz)
-    vec2 k[] = vec2[](vec2(0.f,-1.f),vec2(-0.5f,-0.5f),vec2(0.5f,0.9f),vec2(-0.7f,-0.1f)); // wave vector (horiz)
+    vec2 k[] = vec2[](vec2(0.f,-1.f),vec2(0.6f,-0.5f),vec2(0.9f,0.2f),vec2(1.f,0.f)); // wave vector (horiz)
+    //vec2 k[] = vec2[](vec2(0.f,-1.f),vec2(-0.5f,-0.5f),vec2(0.5f,0.9f),vec2(-0.7f,-0.1f)); // wave vector (horiz)
 
     //vec2 k[] = vec2[](vec2(0.f,1.f),vec2(0.5,0.5f),vec2(0.9f,0.5f),vec2(0.1f,0.7f)); // wave vector (horiz)
 
@@ -158,10 +158,13 @@ vec3 gerstnerWave(vec2 x0) {
     //float theta[] = float[](0.5, 4.0, 5.0, 2.5); // wavelength
     //float theta[] = float[](8.0, 5.0, 3.0, 1.0); // wavelength
 
-    float theta[] = float[](8.0, 2.0, 3.0, 5.0); // wavelength
+    //float theta[] = float[](8.0, 2.0, 3.0, 5.0); // wavelength
+    float theta[] = float[](8.0, 2.0, 3.0, 3.0); // wavelength
 
-    float k_mag[] = float[](1.0, 3.0, 2.0, 5.0); // k magnitude
-    float w[] = float[](1.0, 0.5, 0.25, 1.5); // frequency
+    //float k_mag[] = float[](1.0, 3.0, 2.0, 5.0); // k magnitude
+    float k_mag[] = float[](1.0, 3.0, 2.0, 10.0); // k magnitude
+    //float w[] = float[](1.0, 0.5, 0.25, 1.5); // frequency
+    float w[] = float[](1.0, 0.5, 0.25, 0.75); // frequency
     //float p[] = float[](0.f, 3.f, 0.2f, 0.5f); // phase
     float p[] = float[](0.75f, 3.f, 0.2f, 0.5f); // phase
 
@@ -222,32 +225,6 @@ void main()
   fs_Pos = vs_Pos.xyz;
   fs_UV = vec2(vs_Pos.xz + u_PlanePos.xy);
 
-  /*
-  vec2 fbm_mid = fbm((vs_Pos.xz/2.0) + u_PlanePos.xy * 0.4);
-  if (u_Color == 1) {
-    fbm_mid = fbm((vs_Pos.xz*3.0) + u_PlanePos.xy * 0.4);
-  }
-  fs_FBM = vs_Pos.y + fbm_mid.x;*/
-  /*fs_Worley = WorleyNoise((vs_Pos.xz/8.0) + u_PlanePos.xy * 0.4, 1);
-  vec2 rock_noise = vec2(1.0, 1.0) - fbm(vec2(WorleyNoise((vs_Pos.xz/10.0) + u_PlanePos.xy * 0.4, 0))*2.2);
-  float remap1 = clamp(sin(rock_noise.x * 10.0) / 3.0, 0.0, 1.0);
-  if (remap1 < 0.05) {
-    remap1 = 0.0;
-  }
-  fs_Rock = remap1 * 10.0;
-  if (u_Anim == 1) {
-    fs_guiCol = 1.0;
-  }
-  else {
-    fs_guiCol = 0.0;
-  }
-  if (u_Color == 1) {
-    fs_guiSan = 1.0;
-  }
-  else {
-    fs_guiSan = 0.0;
-  }*/
-
   fs_Time = float(u_Time);
 
   //vec4 modelposition = vec4(vs_Pos.x, fs_Rock + fs_FBM * 0.5, vs_Pos.z, 1.0);
@@ -290,6 +267,16 @@ void main()
 
   modelposition = u_Model * modelposition;
   //gl_Position = u_ViewProj * modelposition;
-  
-  gl_Position = (u_ViewProj * u_RotMat) * modelposition;
+  /*mat4 transfMat = mat4(1.0,0.0,0.0,16.0,
+  0.0,1.0,0.0,16.0,
+  0.0,0.0,1.0,-16.0,
+  0.0,0.0,0.0,1.0);
+  mat4 transfMat2 = transfMat;
+  transfMat2[2][3] = -1.f * transfMat[2][3];
+  transfMat2[0][3] = -1.f * transfMat[0][3];
+  transfMat2[1][3] = -1.f * transfMat[1][3];
+  vec4 transform = transfMat * u_RotMat * transfMat2 * modelposition;*/
+  vec4 transform = u_RotMat * modelposition;
+  //gl_Position = u_ViewProj * transform;
+  gl_Position = u_ViewProj * modelposition;
 }

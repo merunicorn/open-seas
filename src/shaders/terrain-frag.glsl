@@ -5,11 +5,15 @@ precision highp float;
 uniform vec3 u_Eye, u_Ref, u_Up;
 uniform vec2 u_PlanePos; // Our location in the virtual world displayed by the plane
 uniform mat4 u_RotMat;
+uniform int u_RotDeg;
 uniform mat4 u_InvRotMat;
+uniform mat4 u_ViewProj;
 uniform int u_Foam;
+uniform int u_Opacity;
 
 //vec3 bg_Col = vec3(88.0 / 255.0, 91.0 / 255.0, 196.0 / 255.0);
-vec3 bg_Col = vec3(0.5216, 0.8157, 0.9059);
+//vec3 bg_Col = vec3(0.5216, 0.8157, 0.9059);
+vec3 bg_Col = vec3(0.6941, 0.8745, 0.9451);
 //vec3 sand_Col = vec3(u_Color.x, u_Color.y, u_Color.z);
 vec3 sand_Col = vec3(255.0 / 255.0, 229.0 / 255.0, 99.0 / 255.0);
 
@@ -145,17 +149,21 @@ void main()
     uv.y += sin(fs_Time * 0.1f);
     uv.x += sin(fs_Time * 0.025f);
 
-    /*uv.y += 0.01 * (sin(uv.x * 13.5 + fs_Time * 5.35) + 
-                     sin(uv.x * 4.8 + fs_Time * 1.05) + sin(uv.x * 7.3 + fs_Time * 0.45)) / 3.0;
-    uv.x += 0.12 * (sin(uv.y * 4.0 + fs_Time * 0.5) + 
-                     sin(uv.y * 16.8 + fs_Time * 3.75) + sin(uv.y * 11.3 + fs_Time * 0.2)) / 3.0;
-    uv.y += 0.12 * (sin(uv.x * 14.2 + fs_Time * 0.64) + 
-                     sin(uv.x * 6.3 + fs_Time * 1.65) + sin(uv.x * 8.2 + fs_Time * 2.45)) / 3.0;*/
+    // distance fog
+    float p = length(fs_Pos);
+    float t2 = clamp(smoothstep(40.0, 80.0, p), 0.0, 1.0);
+    out_Col.a = (1.f - t2);
+    out_Col.rgb = mix(out_Col.rgb, bg_Col.rgb * 0.3f, t2);
+    // adding water transparency
+    
+    //if (u_Opacity != -1) {
+    //    out_Col.a = clamp(out_Col.a, 0.0, 0.65);
+    //} else {
+        float opac = float(u_Opacity);
+        out_Col.a = clamp(out_Col.a, 0.0, (opac * 10.f)/100.f);
+    //}
+    out_Col.rgb *= vec3(0.2118, 0.6235, 0.8588);
 
-    /*uv.y += 0.5 * (sin(uv.x * 13.5 + fs_Time * 5.35) + 
-                     sin(uv.x * 4.8 + fs_Time * 1.05) + sin(uv.x * 7.3 + fs_Time * 0.45)) / 3.0;
-    uv.x += 5.12 * (sin(uv.y * 4.0 + fs_Time * 0.5) + 
-                     sin(uv.y * 16.8 + fs_Time * 3.75) + sin(uv.y * 11.3 + fs_Time * 0.2)) / 3.0;*/
 
     // worley texture
     float worl = WorleyNoise(uv.xy / 20.3);
@@ -174,23 +182,24 @@ void main()
     // gradient
     vec3 grad_Col = vec3(0.4039, 0.9059, 0.8824);
     grad_Col = vec3(0.0588, 0.0902, 0.5725);
-    float p = length(fs_Pos);
+    
     float t1 = clamp(smoothstep(20.0, 80.0, p), 0.0, 1.0);
     //float t1 = distance(fs_Pos.xz, fs_UV);
-    out_Col = vec4(mix(vec3(col_base),grad_Col,t1 * 0.7),1.0);
+    out_Col = vec4(mix(vec3(col_base),grad_Col,t1 * 0.7),out_Col.a);
 
     // cool color distortion, potentially a good effect for wake??
-    vec3 dist_Col = vec3(0.4039, 0.9059, 0.8824);
-    float t3 = distance(fs_Pos.xy, vec2(0.f,0.5f));
+    //vec3 dist_Col = vec3(0.4039, 0.9059, 0.8824);
+    //float t3 = distance(fs_Pos.xy, vec2(0.f,0.5f));
     //out_Col = vec4(0.5) * vec4(mix(vec3(out_Col),dist_Col,t3),1.0);
 
     // WORLEY
     //vec3 col_base = vec3(0.1686, 0.8314, 0.8784);
     //out_Col = vec4(mix(vec3(out_Col),col_worl,0.2),1.0);
     //out_Col = vec4(mix(vec3(out_Col),col_worl2,0.125),1.0);
-    
-    out_Col = vec4(mix(vec3(out_Col),col_worl,0.075),1.0);
-    out_Col = vec4(mix(vec3(out_Col),col_worl2,0.1),1.0);
+    col_worl.rgb *= vec3(0.0588, 0.5137, 0.7804);
+    col_worl2.rgb *= vec3(0.4824, 0.8902, 0.8706); 
+    out_Col = vec4(mix(vec3(out_Col),col_worl,0.55),out_Col.a); // 0.075
+    out_Col = vec4(mix(vec3(out_Col),col_worl2,0.35),out_Col.a); // 0.1 // increased opacity 
 
     // lighting / using normals
     // Implement specular light
@@ -203,7 +212,8 @@ void main()
 
           // Compute final shaded color
           vec3 mater = vec3(0.1647, 0.9451, 0.9451) * min(specularIntensity, 1.0);
-          out_Col = vec4(mix(vec3(out_Col),mater,0.6),1.0);
+          //vec3 mater = vec3(0.4627, 0.7255, 0.8471) * min(specularIntensity, 1.0);
+          out_Col = vec4(mix(vec3(out_Col),mater,0.7),out_Col.a);
 
 
     // ALT LIGHTING
@@ -222,9 +232,7 @@ void main()
     out_Col = vec4(diffuseColor.rgb * lightIntensity * lightCol.rgb, diffuseColor.a);*/
     
 
-    // distance fog
-    float t2 = clamp(smoothstep(40.0, 80.0, p), 0.0, 1.0);
-    out_Col = vec4(mix(vec3(out_Col),bg_Col,t2),1.0);
+    
 
     // GRID
     /*if (fract(fs_UV.x) < 0.01f || fract(fs_UV.y) < 0.01f) {
@@ -238,7 +246,8 @@ void main()
     vec3 col_pt = vec3(1.0, 1.0, 1.0);
     if (fract(fs_UV.x) < 0.01f || fract(fs_UV.y) < 0.01f) {
         //out_Col = vec4(col_pt,1.0); //white grid
-        out_Col = vec4(mix(vec3(out_Col),col_pt,0.5),1.0); //grid opacity lowered
+        // COMMENTED OUT FOR NOW
+        //out_Col = vec4(mix(vec3(out_Col),col_pt,0.5),out_Col.a); //grid opacity lowered
     }
 
     // CRESTS
@@ -267,7 +276,7 @@ void main()
         //out_Col += vec4(worl_col,0.0);
     }
     //out_Col += vec4(worl_col,1.0);
-    out_Col = vec4(mix(vec3(out_Col),worl_col,0.65),1.0);
+    out_Col = vec4(mix(vec3(out_Col),worl_col,0.25),out_Col.a); // lowered opacity
 
     // fs_Peak
     if (fs_Peak >= 0.5) {
@@ -281,39 +290,51 @@ void main()
                 peak_col = vec3(out_Col) + vec3(0.1137, 0.1176, 0.1216);
             }
         }
-        out_Col = vec4(mix(vec3(out_Col),vec3(peak_col),0.7),1.0);
+        out_Col = vec4(mix(vec3(out_Col),vec3(peak_col),0.7),out_Col.a); // lowered opacity
     }
 
     vec2 boatPos = vec2(0.f,-16.f); // initial boat pos, in future this will be passed in dep on new boat pos on plane
+    /*mat3 rotmat = mat3(vec3(u_InvRotMat[0][0], u_InvRotMat[0][2], 0.0),vec3(u_InvRotMat[2][0], u_InvRotMat[2][2], 0.0),vec3(0.0, 0.0, 1.0));
+    vec3 planePos = vec3(u_PlanePos.x, 1.0, u_PlanePos.y);
+    boatPos += (planePos * rotmat).xz; */
+    //vec4 bP = vec4(0.f, 0.f, -16.f, 1.0); 
+    /*vec4 bP = vec4(u_PlanePos.x, u_PlanePos.y, u_PlanePos.y, 1.0);
+    vec4 newP = (u_InvRotMat * bP);*/
+    boatPos += u_PlanePos;
 
     if (float(u_Foam) == 1.0) {
     // FOAM PATTERN
     float foamPatFlag = 0.f;
     float rInit = 1.7f;
     float rInit2 = 3.f;
+    float rot = float(u_RotDeg);
+    rot *= M_PI;
+    rot /= -180.0;
+    float ellipseX = ((fs_UV.x - boatPos.x)*cos(rot)) - ((fs_UV.y - boatPos.y)*sin(rot));
+    float ellipseY = ((fs_UV.x - boatPos.x)*sin(rot)) + ((fs_UV.y - boatPos.y)*cos(rot));
     // ellipse equation
-    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rInit,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rInit2,2.f)) < 1.f) {
+    if ((pow(ellipseX,2.f)/pow(rInit,2.f)) + (pow(ellipseY, 2.f)/pow(rInit2,2.f)) < 1.f) {
         foamPatFlag = 1.f;
     }
     float rr = 2.f;
     float rrL = 3.3f;
     float ww = 0.2f;
-    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rr,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rrL,2.f)) < 1.f // outer ellipse
-        && (pow(fs_UV.x - boatPos.x,2.f)/pow(rr-ww,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rrL-ww,2.f)) > 1.f) { // inner ellipse
+    if ((pow(ellipseX,2.f)/pow(rr,2.f)) + (pow(ellipseY, 2.f)/pow(rrL,2.f)) < 1.f // outer ellipse
+        && (pow(ellipseX,2.f)/pow(rr-ww,2.f)) + (pow(ellipseY, 2.f)/pow(rrL-ww,2.f)) > 1.f) { // inner ellipse
         foamPatFlag = 1.f;
     }
     float rr2 = 2.3f;
     float rr2L = 3.7f;
     float ww2 = 0.05f;
-    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rr2,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr2L,2.f)) < 1.f
-        && (pow(fs_UV.x - boatPos.x,2.f)/pow(rr2-ww2,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr2L-ww2,2.f)) > 1.f) {
+    if ((pow(ellipseX,2.f)/pow(rr2,2.f)) + (pow(ellipseY, 2.f)/pow(rr2L,2.f)) < 1.f
+        && (pow(ellipseX,2.f)/pow(rr2-ww2,2.f)) + (pow(ellipseY, 2.f)/pow(rr2L-ww2,2.f)) > 1.f) {
         foamPatFlag = 1.f;
     }
     float rr3 = 2.8f;
     float rr3L = 4.f;
     float ww3 = 0.025f;
-    if ((pow(fs_UV.x - boatPos.x,2.f)/pow(rr3,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr3L,2.f)) < 1.f
-        && (pow(fs_UV.x - boatPos.x,2.f)/pow(rr3-ww3,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f)/pow(rr3L-ww3,2.f)) > 1.f) {
+    if ((pow(ellipseX,2.f)/pow(rr3,2.f)) + (pow(ellipseY, 2.f)/pow(rr3L,2.f)) < 1.f
+        && (pow(ellipseX,2.f)/pow(rr3-ww3,2.f)) + (pow(ellipseY, 2.f)/pow(rr3L-ww3,2.f)) > 1.f) {
         foamPatFlag = 1.f;
     }
 
@@ -325,7 +346,7 @@ void main()
 
     // create an ellipse that expands in radius with u_Time
     // when radius is = to max foam radius, ellipse should start back at small radius
-    float timeC = fs_Time * 0.025f; // speed
+    float timeC = fs_Time * 0.045f; // speed
     float t = cos(timeC); // -1 to 1 range
     float changeR = t*radius;
     float changeRL = t*radiusL;
@@ -339,7 +360,7 @@ void main()
         changeR = t*radius;
         changeRL = t*radiusL;
     }   
-    if ((pow(fs_UV.x - boatPos.x,2.f))/(pow(changeR,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f))/(pow(changeRL,2.f)) < 1.f) {
+    if ((pow(ellipseX,2.f))/(pow(changeR,2.f)) + (pow(ellipseY, 2.f))/(pow(changeRL,2.f)) < 1.f) {
         foamFlag1 = 1.f;
     } 
 
@@ -356,15 +377,17 @@ void main()
         changeR2 = tt*radius;
         changeR2L = tt*radiusL;
     }
-    if ((pow(fs_UV.x - boatPos.x,2.f))/(pow(changeR2,2.f)) + (pow(fs_UV.y - boatPos.y, 2.f))/(pow(changeR2L,2.f)) < 1.f) {
+    if ((pow(ellipseX,2.f))/(pow(changeR2,2.f)) + (pow(ellipseY, 2.f))/(pow(changeR2L,2.f)) < 1.f) {
         foamFlag2 = 1.f;
     }
 
     // adding semi-transparent foam
     if( foamPatFlag == 1.f && 
     !(foamFlag1 == 1.f || foamFlag2 != 1.f)) {
-        out_Col = vec4(mix(vec3(out_Col),vec3(foamCol),0.45),1.0);
+        out_Col = vec4(mix(vec3(out_Col),vec3(foamCol),0.75),out_Col.a);
     }
     }
+
+    
     
 }

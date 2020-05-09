@@ -16,11 +16,12 @@ void main()
     //out_Col = vec4(dist) * fs_Col;
     //out_Col = fs_Col;
     vec4 boatCol;
-    if (fs_Pos.x > -1.f && fs_Pos.x < 1.f && fs_Pos.z > -1.75f && fs_Pos.z < 1.25f) {
-      boatCol = vec4(0.7686, 0.4706, 0.3804, 1.0);
+    /*if (fs_Pos.x > -1.f && fs_Pos.x < 1.f && fs_Pos.z > -1.75f && fs_Pos.z < 1.25f) {
+      //boatCol = vec4(0.7686, 0.4706, 0.3804, 1.0);
     } else {
       boatCol = vec4(0.6549, 0.3412, 0.1961, 1.0);
-    }
+    }*/
+    boatCol = vec4(0.6549, 0.3412, 0.1961, 1.0);
 
     vec4 diffuseColor = vec4(boatCol);
 
